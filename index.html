@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>مینی اپ من</title>
+    
+    <!-- SDK تلگرام -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 30px 25px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .sub {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .score-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .score-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        
+        #score {
+            font-size: 55px;
+            font-weight: bold;
+            color: #ffd700;
+            line-height: 1.2;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            margin-bottom: 12px;
+        }
+        
+        button:active {
+            transform: scale(0.97);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            transform: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ffd700, #ffb347);
+            color: #1a1a2e;
+            box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 15px;
+            padding: 8px;
+        }
+        
+        .telegram-btn {
+            background: #27a5e6;
+            color: white;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ مینی اپ</h1>
+        <div class="sub">کلیک کن و جایزه بگیر!</div>
+        
+        <div class="score-card">
+            <div class="score-label">امتیاز شما</div>
+            <div id="score">0</div>
+        </div>
+        
+        <button id="rewardBtn" class="btn-primary">🎁 تماشای تبلیغ + 10 امتیاز</button>
+        <button id="infoBtn" class="btn-secondary">ℹ️ اطلاعات بیشتر</button>
+        
+        <div class="status" id="status">✅ آماده | روی دکمه زرد کلیک کن</div>
+    </div>
+
+    <script>
+        // راه‌اندازی اولیه تلگرام
+        let tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            tg.setHeaderColor('bg_color');
+        }
+        
+        // المنت‌ها
+        const rewardBtn = document.getElementById('rewardBtn');
+        const infoBtn = document.getElementById('infoBtn');
+        const scoreSpan = document.getElementById('score');
+        const statusDiv = document.getElementById('status');
+        
+        let score = 0;
+        
+        // تابع نمایش تبلیغ (برای تست بدون AdsGram فعلاً)
+        // بعداً میتونیم AdsGram یا Monetag وصل کنیم
+        function showAd() {
+            return new Promise((resolve, reject) => {
+                // شبیه‌سازی تبلیغ (بعداً با تبلیغ واقعی جایگزین میشه)
+                if (tg) {
+                    tg.showConfirm('یک تبلیغ نمایش داده میشه. ادامه میدی؟', (confirmed) => {
+                        if (confirmed) {
+                            statusDiv.innerHTML = '📺 در حال نمایش تبلیغ...';
+                            setTimeout(() => {
+                                resolve(true);
+                            }, 2000);
+                        } else {
+                            reject(new Error('لغو شد'));
+                        }
+                    });
+                } else {
+                    // برای تست خارج از تلگرام
+                    if (confirm('تبلیغ تستی. ادامه؟')) {
+                        setTimeout(() => resolve(true), 1000);
+                    } else {
+                        reject(new Error('لغو شد'));
+                    }
+                }
+            });
+        }
+        
+        // دکمه تبلیغ تشویقی
+        rewardBtn.addEventListener('click', async () => {
+            rewardBtn.disabled = true;
+            rewardBtn.innerText = '⏳ در حال بارگذاری...';
+            statusDiv.innerHTML = '🔄 در حال دریافت تبلیغ...';
+            
+            try {
+                await showAd();
+                
+                // اعطای جایزه
+                score += 10;
+                scoreSpan.innerText = score;
+                statusDiv.innerHTML = '✅ +10 امتیاز! ممنون از دیدن تبلیغ';
+                
+                if (tg) {
+                    tg.HapticFeedback.impactOccurred('light');
+                    tg.showAlert('🎉 10 امتیاز به حساب تو اضافه شد!');
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = '⚠️ تبلیغ نمایش داده نشد. دوباره تلاش کن';
+                if (tg) {
+                    tg.showAlert('⚠️ تبلیغ نمایش داده نشد');
+                }
+            } finally {
+                rewardBtn.disabled = false;
+                rewardBtn.innerText = '🎁 تماشای تبلیغ + 10 امتیاز';
+                setTimeout(() => {
+                    if (statusDiv.innerHTML.includes('⚠️')) {
+                        statusDiv.innerHTML = '✅ آماده | روی دکمه زرد کلیک کن';
+                    }
+                }, 2000);
+            }
+        });
+        
+        // دکمه اطلاعات
+        infoBtn.addEventListener('click', () => {
+            const msg = `📊 آمار شما\nامتیاز: ${score}\nتعداد بازدید: ${Math.floor(score/10)}\n\n💡 با دیدن تبلیغات امتیاز بگیر!`;
+            if (tg) {
+                tg.showAlert(msg);
+            } else {
+                alert(msg);
+            }
+        });
+        
+        // نمایش خوش‌آمدگویی
+        setTimeout(() => {
+            if (tg) {
+                tg.showPopup({
+                    title: '👋 خوش اومدی!',
+                    message: 'برای شروع روی دکمه زرد کلیک کن و امتیاز بگیر.',
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        }, 500);
+    </script>
+</body>
+</html>
