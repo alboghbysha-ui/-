@@ -61,6 +61,27 @@
             color: #a0a0a0;
         }
 
+        /* Debug badge */
+        .debug-badge {
+            font-size: 11px;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .debug-badge.ok {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.4);
+        }
+
+        .debug-badge.warn {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.4);
+        }
+
         /* Main Content */
         .content {
             flex: 1;
@@ -246,6 +267,11 @@
             color: #e0e0e0;
         }
 
+        .info-box.warn {
+            background: rgba(231, 76, 60, 0.1);
+            border-left-color: #e74c3c;
+        }
+
         /* Toast */
         .toast {
             position: fixed;
@@ -259,6 +285,8 @@
             font-weight: 600;
             z-index: 1000;
             animation: slideUp 0.3s ease;
+            max-width: 85%;
+            text-align: center;
         }
 
         @keyframes slideUp {
@@ -270,21 +298,6 @@
                 opacity: 1;
                 transform: translateX(-50%) translateY(0);
             }
-        }
-
-        /* Loading */
-        .loading {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #00d4ff;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
         }
 
         /* Scrollbar */
@@ -320,6 +333,7 @@
             <div class="logo-icon">💰</div>
             <div class="app-name">AdFlow</div>
             <div class="app-tagline">Earn money watching ads</div>
+            <div class="debug-badge warn" id="sdkStatus">SDK: checking...</div>
         </div>
 
         <!-- Main Content -->
@@ -347,7 +361,7 @@
             </div>
 
             <!-- Info -->
-            <div class="info-box">
+            <div class="info-box" id="infoBox">
                 💡 Watch ads to earn money. Each ad takes 15 seconds and gives you a reward!
             </div>
 
@@ -373,11 +387,24 @@
     </div>
 
     <!-- AdsBitvex SDK -->
-    <script async src="https://sdk.adsbitvex.com/reward.js"></script>
+    <script src="https://sdk.adsbitvex.com/reward.js"
+            onload="onSdkLoaded()"
+            onerror="onSdkFailed()"></script>
 
     <script>
+        // ============================================================
+        // CONFIG - fill these in from your AdsBitvex publisher dashboard
+        // ============================================================
+        const AD_CONFIG = {
+            publisherId: "000000000901",
+            appId: "000192"
+        };
+
+        let sdkReady = false;
+        let sdkInitAttempted = false;
+
         // Initialize Telegram Web App
-        let tg = window.Telegram.WebApp;
+        let tg = window.Telegram ? window.Telegram.WebApp : null;
         if (tg) {
             tg.expand();
             tg.setBackgroundColor("#1a1a2e");
@@ -390,10 +417,81 @@
             today: 0,
             ads: 0,
             activity: [],
-            publisherId: "000000000901",
-            appId: "000192",
             bonusClaimed: false
         };
+
+        // ---------------- SDK loading / init ----------------
+
+        function setSdkBadge(text, ok) {
+            const badge = document.getElementById('sdkStatus');
+            badge.textContent = 'SDK: ' + text;
+            badge.className = 'debug-badge ' + (ok ? 'ok' : 'warn');
+        }
+
+        function onSdkLoaded() {
+            console.log('[AdFlow] AdsBitvex script tag loaded');
+            initSdk();
+        }
+
+        function onSdkFailed() {
+            console.error('[AdFlow] AdsBitvex script FAILED to load (network/blocked/wrong URL)');
+            setSdkBadge('failed to load', false);
+            showTestModeNotice('Ad SDK failed to load — running in test mode.');
+        }
+
+        function initSdk() {
+            if (sdkInitAttempted) return;
+            sdkInitAttempted = true;
+
+            if (!window.AdsBitvex) {
+                console.error('[AdFlow] Script loaded but window.AdsBitvex is undefined. Check the SDK global name in AdsBitvex docs.');
+                setSdkBadge('object missing', false);
+                showTestModeNotice('Ad SDK object not found — running in test mode.');
+                return;
+            }
+
+            try {
+                // NOTE: confirm the exact method/param names in the AdsBitvex
+                // integration docs — this is the common pattern but publisher
+                // SDKs vary (init / config / setup, etc).
+                if (typeof window.AdsBitvex.init === 'function') {
+                    window.AdsBitvex.init({
+                        publisherId: AD_CONFIG.publisherId,
+                        appId: AD_CONFIG.appId
+                    });
+                    console.log('[AdFlow] AdsBitvex.init() called with', AD_CONFIG);
+                } else {
+                    console.warn('[AdFlow] AdsBitvex.init is not a function — SDK may auto-init, or the method name is different. Check docs.');
+                }
+
+                sdkReady = true;
+                setSdkBadge('ready', true);
+            } catch (e) {
+                console.error('[AdFlow] Error initializing AdsBitvex:', e);
+                setSdkBadge('init error', false);
+                showTestModeNotice('Ad SDK failed to initialize — running in test mode.');
+            }
+        }
+
+        function showTestModeNotice(msg) {
+            const box = document.getElementById('infoBox');
+            box.classList.add('warn');
+            box.textContent = '⚠️ ' + msg + ' Rewards below are simulated and no real ad is shown to the user.';
+        }
+
+        // Fallback: if onload never fires (e.g. cached weirdly) check after 4s
+        setTimeout(() => {
+            if (!sdkInitAttempted) {
+                if (window.AdsBitvex) {
+                    console.warn('[AdFlow] onload never fired but AdsBitvex is present — initializing late');
+                    initSdk();
+                } else {
+                    console.error('[AdFlow] AdsBitvex still not available after timeout');
+                    setSdkBadge('not detected', false);
+                    showTestModeNotice('Ad SDK not detected — running in test mode.');
+                }
+            }
+        }, 4000);
 
         // Load user data from storage
         function loadUser() {
@@ -445,44 +543,46 @@
             btn.disabled = true;
             btn.textContent = 'Loading ad...';
 
-            // Try to use AdsBitvex
-            if (window.AdsBitvex && window.AdsBitvex.showRewardAd) {
+            if (sdkReady && window.AdsBitvex && typeof window.AdsBitvex.showRewardAd === 'function') {
                 try {
-                    AdsBitvex.showRewardAd({
+                    console.log('[AdFlow] Requesting reward ad from AdsBitvex...');
+                    window.AdsBitvex.showRewardAd({
                         onComplete: function() {
+                            console.log('[AdFlow] Ad completed, rewarding user');
                             const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
-                            addReward(parseFloat(reward));
+                            addReward(parseFloat(reward), false);
                             btn.disabled = false;
                             btn.textContent = 'Watch Ad Now 🎬';
                         },
                         onError: function(error) {
-                            showToast('Ad failed to load');
+                            console.error('[AdFlow] AdsBitvex reported an ad error:', error);
+                            showToast('Ad failed to load — no fill available');
                             btn.disabled = false;
                             btn.textContent = 'Watch Ad Now 🎬';
                         }
                     });
                 } catch (e) {
-                    // Fallback
-                    simulateAd();
+                    console.error('[AdFlow] showRewardAd threw an exception:', e);
+                    showToast('Ad error — see console');
                     btn.disabled = false;
                     btn.textContent = 'Watch Ad Now 🎬';
                 }
             } else {
-                // SDK not loaded - simulate
+                console.warn('[AdFlow] SDK not ready, falling back to TEST MODE (no real ad shown)');
                 simulateAd();
                 btn.disabled = false;
                 btn.textContent = 'Watch Ad Now 🎬';
             }
         }
 
-        // Simulate Ad (for testing)
+        // Simulate Ad (test mode only — clearly labeled, not silent)
         function simulateAd() {
             const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
-            addReward(parseFloat(reward));
+            addReward(parseFloat(reward), true);
         }
 
         // Add Reward
-        function addReward(amount) {
+        function addReward(amount, isTestMode) {
             user.balance += amount;
             user.today += amount;
             user.ads += 1;
@@ -493,7 +593,7 @@
             user.activity.unshift({
                 type: 'ad',
                 amount: amount.toFixed(2),
-                time: time
+                time: time + (isTestMode ? ' (test)' : '')
             });
 
             if (user.activity.length > 20) {
@@ -502,7 +602,7 @@
 
             saveUser();
             updateUI();
-            showToast(`Earned $${amount.toFixed(3)}!`);
+            showToast((isTestMode ? '[TEST MODE] ' : '') + `Earned $${amount.toFixed(3)}!`);
         }
 
         // Claim Daily Bonus
@@ -581,4 +681,4 @@
         resetDaily();
     </script>
 </body>
-    </html>
+</html>
