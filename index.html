@@ -387,16 +387,15 @@
     </div>
 
     <!-- AdsBitvex SDK -->
-    <script src="https://sdk.adsbitvex.com/reward.js"
+    <script src="https://sdk.adsbitvex.com/functions/v1/ad-script?appid=000192"
             onload="onSdkLoaded()"
             onerror="onSdkFailed()"></script>
 
     <script>
         // ============================================================
-        // CONFIG - fill these in from your AdsBitvex publisher dashboard
+        // CONFIG - your AdsBitvex App ID (also baked into the script URL above)
         // ============================================================
         const AD_CONFIG = {
-            publisherId: "000000000901",
             appId: "000192"
         };
 
@@ -443,34 +442,20 @@
             if (sdkInitAttempted) return;
             sdkInitAttempted = true;
 
-            if (!window.AdsBitvex) {
-                console.error('[AdFlow] Script loaded but window.AdsBitvex is undefined. Check the SDK global name in AdsBitvex docs.');
-                setSdkBadge('object missing', false);
-                showTestModeNotice('Ad SDK object not found — running in test mode.');
+            // AdsBitvex's real API exposes window.showadsbitvex() (reward ad)
+            // and window.showadsbitvex_init() (fast interstitial). There is
+            // no separate init/config call — the appid in the script URL
+            // handles that server-side.
+            if (typeof window.showadsbitvex !== 'function') {
+                console.error('[AdFlow] Script loaded but window.showadsbitvex is not a function yet.');
+                setSdkBadge('function missing', false);
+                showTestModeNotice('Ad SDK function not found — running in test mode.');
                 return;
             }
 
-            try {
-                // NOTE: confirm the exact method/param names in the AdsBitvex
-                // integration docs — this is the common pattern but publisher
-                // SDKs vary (init / config / setup, etc).
-                if (typeof window.AdsBitvex.init === 'function') {
-                    window.AdsBitvex.init({
-                        publisherId: AD_CONFIG.publisherId,
-                        appId: AD_CONFIG.appId
-                    });
-                    console.log('[AdFlow] AdsBitvex.init() called with', AD_CONFIG);
-                } else {
-                    console.warn('[AdFlow] AdsBitvex.init is not a function — SDK may auto-init, or the method name is different. Check docs.');
-                }
-
-                sdkReady = true;
-                setSdkBadge('ready', true);
-            } catch (e) {
-                console.error('[AdFlow] Error initializing AdsBitvex:', e);
-                setSdkBadge('init error', false);
-                showTestModeNotice('Ad SDK failed to initialize — running in test mode.');
-            }
+            sdkReady = true;
+            setSdkBadge('ready', true);
+            console.log('[AdFlow] AdsBitvex ready, appid=', AD_CONFIG.appId);
         }
 
         function showTestModeNotice(msg) {
@@ -482,11 +467,11 @@
         // Fallback: if onload never fires (e.g. cached weirdly) check after 4s
         setTimeout(() => {
             if (!sdkInitAttempted) {
-                if (window.AdsBitvex) {
-                    console.warn('[AdFlow] onload never fired but AdsBitvex is present — initializing late');
+                if (typeof window.showadsbitvex === 'function') {
+                    console.warn('[AdFlow] onload never fired but showadsbitvex is present — initializing late');
                     initSdk();
                 } else {
-                    console.error('[AdFlow] AdsBitvex still not available after timeout');
+                    console.error('[AdFlow] showadsbitvex still not available after timeout');
                     setSdkBadge('not detected', false);
                     showTestModeNotice('Ad SDK not detected — running in test mode.');
                 }
@@ -543,30 +528,22 @@
             btn.disabled = true;
             btn.textContent = 'Loading ad...';
 
-            if (sdkReady && window.AdsBitvex && typeof window.AdsBitvex.showRewardAd === 'function') {
-                try {
-                    console.log('[AdFlow] Requesting reward ad from AdsBitvex...');
-                    window.AdsBitvex.showRewardAd({
-                        onComplete: function() {
-                            console.log('[AdFlow] Ad completed, rewarding user');
-                            const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
-                            addReward(parseFloat(reward), false);
-                            btn.disabled = false;
-                            btn.textContent = 'Watch Ad Now 🎬';
-                        },
-                        onError: function(error) {
-                            console.error('[AdFlow] AdsBitvex reported an ad error:', error);
-                            showToast('Ad failed to load — no fill available');
-                            btn.disabled = false;
-                            btn.textContent = 'Watch Ad Now 🎬';
-                        }
+            if (sdkReady && typeof window.showadsbitvex === 'function') {
+                console.log('[AdFlow] Requesting reward ad via window.showadsbitvex()...');
+                window.showadsbitvex()
+                    .then(function() {
+                        console.log('[AdFlow] Ad completed, rewarding user');
+                        const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
+                        addReward(parseFloat(reward), false);
+                    })
+                    .catch(function(e) {
+                        console.error('[AdFlow] Ad error:', e);
+                        showToast('Ad failed to load — no fill available');
+                    })
+                    .finally(function() {
+                        btn.disabled = false;
+                        btn.textContent = 'Watch Ad Now 🎬';
                     });
-                } catch (e) {
-                    console.error('[AdFlow] showRewardAd threw an exception:', e);
-                    showToast('Ad error — see console');
-                    btn.disabled = false;
-                    btn.textContent = 'Watch Ad Now 🎬';
-                }
             } else {
                 console.warn('[AdFlow] SDK not ready, falling back to TEST MODE (no real ad shown)');
                 simulateAd();
