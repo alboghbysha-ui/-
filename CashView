@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarningsPro - AdsBitvex</title>
+    
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- AdsBitvex SDK -->
+    <script src="https://sdk.adsbitvex.com/reward.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'IRANSans', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-top: 16px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 32px;
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        /* Earnings Card */
+        .earnings-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .earnings-label {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .earnings-amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .earnings-currency {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .earnings-progress {
+            margin-top: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .earnings-progress-bar {
+            background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+            height: 100%;
+            width: 35%;
+            animation: progress 2s ease-in-out;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 35%; }
+        }
+
+        /* Actions Section */
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        .action-btn.primary-full {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 18px;
+            font-size: 16px;
+        }
+
+        /* Watch Ad Button - Hero CTA */
+        .watch-ad-btn {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            padding: 20px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .watch-ad-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: left 0.3s ease;
+        }
+
+        .watch-ad-btn:hover::before {
+            left: 100%;
+        }
+
+        .watch-ad-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-icon {
+            display: inline-block;
+            margin-left: 8px;
+            font-size: 18px;
+        }
+
+        /* Stats Section */
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        /* History Section */
+        .history-section {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .history-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #cbd5e1;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            font-size: 13px;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item-text {
+            color: #cbd5e1;
+        }
+
+        .history-item-reward {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* Info Section */
+        .info-section {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .info-section strong {
+            color: #3b82f6;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            padding-bottom: 20px;
+            margin-top: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 400px) {
+            .earnings-amount {
+                font-size: 28px;
+            }
+            
+            .actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Telegram App Theme Support */
+        @media (prefers-color-scheme: light) {
+            body {
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                color: #1e293b;
+            }
+
+            .header h1 {
+                background: linear-gradient(135deg, #059669 0%, #2563eb 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .earnings-card {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+                border-color: rgba(16, 185, 129, 0.4);
+            }
+
+            .stat-box {
+                background: rgba(59, 130, 246, 0.12);
+                border-color: rgba(59, 130, 246, 0.3);
+            }
+
+            .history-section {
+                background: rgba(248, 250, 252, 0.8);
+                border-color: rgba(148, 163, 184, 0.3);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">💰</div>
+            <h1>EarningsPro</h1>
+            <p>Watch ads and earn money instantly</p>
+        </div>
+
+        <!-- Earnings Card -->
+        <div class="earnings-card">
+            <div class="earnings-label">Total Earnings</div>
+            <div class="earnings-amount" id="totalEarnings">$0.00</div>
+            <div class="earnings-currency">USD</div>
+            <div class="earnings-progress">
+                <div class="earnings-progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Ads Watched</div>
+                <div class="stat-value" id="adCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Today's Earnings</div>
+                <div class="stat-value" id="todayEarnings">$0.00</div>
+            </div>
+        </div>
+
+        <!-- Main CTA -->
+        <button class="watch-ad-btn" id="watchAdBtn" onclick="showRewardAd()">
+            Watch New Ad
+            <span class="btn-icon">🎬</span>
+        </button>
+
+        <!-- Quick Actions -->
+        <div class="actions">
+            <button class="action-btn" onclick="claimBonus()">🎁 Daily Bonus</button>
+            <button class="action-btn secondary" onclick="shareApp()">📤 Share App</button>
+        </div>
+
+        <!-- Info -->
+        <div class="info-section">
+            <strong>💡 Tip:</strong> Each ad takes 15 seconds. Watch more ads daily to earn more money!
+        </div>
+
+        <!-- History -->
+        <div class="history-section">
+            <div class="history-title">📊 Recent Activity</div>
+            <div id="historyContainer">
+                <div class="history-item">
+                    <span class="history-item-text">No earnings yet</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>powered by <strong>AdsBitvex</strong></p>
+            <p style="margin-top: 8px; opacity: 0.7;">Last updated: Today</p>
+        </div>
+    </div>
+
+    <script>
+        // Telegram Web App Integration
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.setBackgroundColor("#0f172a");
+        
+        // Data Management
+        let userData = {
+            totalEarnings: 0,
+            todayEarnings: 0,
+            adCount: 0,
+            history: [],
+            publisherId: "YOUR_PUBLISHER_ID", // Replace with your ID
+            appId: "YOUR_APP_ID"               // Replace with your ID
+        };
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('adsBitvexData');
+            if (saved) {
+                userData = JSON.parse(saved);
+                updateUI();
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('adsBitvexData', JSON.stringify(userData));
+        }
+
+        // Initialize AdsBitvex SDK
+        function initAdsBitvex() {
+            if (window.AdsBitvex) {
+                AdsBitvex.init({
+                    publisherId: userData.publisherId,
+                    appId: userData.appId
+                });
+            }
+        }
+
+        // Show Reward Ad
+        function showRewardAd() {
+            const btn = document.getElementById('watchAdBtn');
+            btn.disabled = true;
+            btn.textContent = 'Ad is playing...';
+
+            if (window.AdsBitvex) {
+                AdsBitvex.showRewardAd({
+                    onComplete: function() {
+                        // Earnings after watching ad
+                        const reward = (Math.random() * 0.05 + 0.01).toFixed(3); // $0.01 - $0.06
+                        
+                        userData.totalEarnings += parseFloat(reward);
+                        userData.todayEarnings += parseFloat(reward);
+                        userData.adCount += 1;
+                        
+                        // Add to history
+                        userData.history.unshift({
+                            time: new Date().toLocaleTimeString('en-US'),
+                            amount: reward,
+                            type: 'reward'
+                        });
+
+                        // Keep only last 10 items
+                        if (userData.history.length > 10) {
+                            userData.history.pop();
+                        }
+
+                        saveData();
+                        updateUI();
+                        showToast(`✅ Earned $${reward}!`);
+                        
+                        btn.disabled = false;
+                        btn.textContent = 'Watch New Ad 🎬';
+                    },
+                    onError: function(error) {
+                        showToast('❌ Error playing ad');
+                        btn.disabled = false;
+                        btn.textContent = 'Watch New Ad 🎬';
+                    }
+                });
+            } else {
+                // Fallback if SDK doesn't load
+                alert('SDK is loading. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Watch New Ad 🎬';
+            }
+        }
+
+        // Claim Daily Bonus
+        function claimBonus() {
+            const bonus = 0.5;
+            userData.totalEarnings += bonus;
+            userData.todayEarnings += bonus;
+            
+            userData.history.unshift({
+                time: new Date().toLocaleTimeString('en-US'),
+                amount: bonus.toFixed(2),
+                type: 'bonus'
+            });
+
+            saveData();
+            updateUI();
+            showToast(`🎉 Claimed daily bonus of $${bonus}!`);
+        }
+
+        // Share App
+        function shareApp() {
+            if (tg.shareLink) {
+                const shareText = 'I\'m earning money with EarningsPro! 💰 Watch ads and earn cash!';
+                tg.shareLink(shareText);
+            } else {
+                showToast('Share feature not available');
+            }
+        }
+
+        // Update UI
+        function updateUI() {
+            document.getElementById('totalEarnings').textContent = '$' + userData.totalEarnings.toFixed(2);
+            document.getElementById('todayEarnings').textContent = '$' + userData.todayEarnings.toFixed(2);
+            document.getElementById('adCount').textContent = userData.adCount;
+
+            // Update History
+            const historyContainer = document.getElementById('historyContainer');
+            if (userData.history.length === 0) {
+                historyContainer.innerHTML = '<div class="history-item"><span class="history-item-text">No earnings yet</span></div>';
+            } else {
+                historyContainer.innerHTML = userData.history.map(item => `
+                    <div class="history-item">
+                        <span class="history-item-text">
+                            ${item.type === 'bonus' ? '🎁' : '🎬'} ${item.time}
+                        </span>
+                        <span class="history-item-reward">+$${item.amount}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Show Toast Notification
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideUp 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize
+        loadData();
+        initAdsBitvex();
+
+        // Auto-reset daily earnings every 24 hours
+        setInterval(() => {
+            userData.todayEarnings = 0;
+            saveData();
+        }, 24 * 60 * 60 * 1000);
+    </script>
+</body>
+</html>
