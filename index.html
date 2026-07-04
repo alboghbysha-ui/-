@@ -399,14 +399,22 @@
         function loadUser() {
             const saved = localStorage.getItem('adflow_user');
             if (saved) {
-                user = JSON.parse(saved);
+                try {
+                    user = JSON.parse(saved);
+                } catch (e) {
+                    console.log('Error loading user data');
+                }
             }
             updateUI();
         }
 
         // Save user data to storage
         function saveUser() {
-            localStorage.setItem('adflow_user', JSON.stringify(user));
+            try {
+                localStorage.setItem('adflow_user', JSON.stringify(user));
+            } catch (e) {
+                console.log('Error saving user data');
+            }
         }
 
         // Update UI
@@ -442,7 +450,8 @@
                 try {
                     AdsBitvex.showRewardAd({
                         onComplete: function() {
-                            addReward(0.01);
+                            const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
+                            addReward(parseFloat(reward));
                             btn.disabled = false;
                             btn.textContent = 'Watch Ad Now 🎬';
                         },
@@ -563,7 +572,7 @@
                 user.bonusClaimed = false;
                 saveUser();
                 updateUI();
-                resetDaily(); // Reschedule
+                resetDaily();
             }, timeUntilReset);
         }
 
