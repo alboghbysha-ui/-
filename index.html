@@ -370,6 +370,11 @@
                 Watch Ad Now 🎬
             </button>
 
+            <!-- AdsGram Sponsored Ad Button (blockId 37432) -->
+            <button class="btn-primary" id="watchAdGramBtn" onclick="watchAdGram()">
+                Watch Sponsored Ad 🚀
+            </button>
+
             <!-- Quick Actions -->
             <div class="btn-row">
                 <button class="btn-secondary" onclick="claimDaily()">🎁 Claim Bonus</button>
@@ -408,9 +413,21 @@
             debug: false
         };
 
+        // Second AdsGram Reward block — the real blockId created in
+        // partner.adsgram.ai for AdFlow (Ad platform: CashView, Block
+        // type: Reward).
+        const AD_CONFIG_GRAM = {
+            blockId: "37432",
+            debug: false
+        };
+
         let sdkReady = false;
         let sdkInitAttempted = false;
         let adController = null;
+
+        let sdkReadyGram = false;
+        let sdkInitAttemptedGram = false;
+        let adControllerGram = null;
 
         // Initialize Telegram Web App
         let tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -477,6 +494,18 @@
             sdkReady = true;
             setSdkBadge(AD_CONFIG.debug ? 'ready (debug mode)' : 'ready', true);
             console.log('[AdFlow] AdsGram ready, blockId=', AD_CONFIG.blockId, 'debug=', AD_CONFIG.debug);
+
+            // Second controller for the "Watch Sponsored Ad" button —
+            // separate blockId, same AdsGram script/window object.
+            if (!sdkInitAttemptedGram) {
+                sdkInitAttemptedGram = true;
+                adControllerGram = window.Adsgram.init({
+                    blockId: AD_CONFIG_GRAM.blockId,
+                    debug: AD_CONFIG_GRAM.debug
+                });
+                sdkReadyGram = true;
+                console.log('[AdFlow] AdsGram (2nd block) ready, blockId=', AD_CONFIG_GRAM.blockId, 'debug=', AD_CONFIG_GRAM.debug);
+            }
         }
 
         function showTestModeNotice(msg) {
@@ -588,6 +617,36 @@
                 simulateAd();
                 btn.disabled = false;
                 btn.textContent = 'Watch Ad Now 🎬';
+            }
+        }
+
+        // Watch Ad (second AdsGram block, blockId 37432)
+        function watchAdGram() {
+            const btn = document.getElementById('watchAdGramBtn');
+            btn.disabled = true;
+            btn.textContent = 'Loading ad...';
+
+            if (sdkReadyGram && adControllerGram) {
+                console.log('[AdFlow] Requesting sponsored ad via AdsGram (blockId 37432)...');
+                adControllerGram.show()
+                    .then(function(result) {
+                        console.log('[AdFlow] Sponsored ad completed, rewarding user', result);
+                        const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
+                        addReward(parseFloat(reward), false);
+                    })
+                    .catch(function(result) {
+                        console.error('[AdFlow] Sponsored ad error:', result);
+                        showToast('Ad failed to load — no fill available');
+                    })
+                    .finally(function() {
+                        btn.disabled = false;
+                        btn.textContent = 'Watch Sponsored Ad 🚀';
+                    });
+            } else {
+                console.warn('[AdFlow] AdsGram block 37432 not ready, falling back to TEST MODE');
+                simulateAd();
+                btn.disabled = false;
+                btn.textContent = 'Watch Sponsored Ad 🚀';
             }
         }
 
