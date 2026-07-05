@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AdFlow - Earn Money Watching Ads</title>
-    
+
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
+
     <style>
         * {
             margin: 0;
@@ -386,21 +386,31 @@
         </div>
     </div>
 
-    <!-- AdsBitvex SDK -->
-    <script src="https://sdk.adsbitvex.com/functions/v1/ad-script?appid=000192"
+    <!-- AdsGram SDK (official script, per docs.adsgram.ai) -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"
             onload="onSdkLoaded()"
             onerror="onSdkFailed()"></script>
 
     <script>
         // ============================================================
-        // CONFIG - your AdsBitvex App ID (also baked into the script URL above)
+        // CONFIG
         // ============================================================
+        // Get this from https://partner.adsgram.ai after creating an
+        // Ad Platform (App) in your publisher account. It looks like a
+        // short numeric/alphanumeric string, e.g. "1234".
+        // IMPORTANT: this is a PLACEHOLDER. Ads will not load until you
+        // replace it with your real blockId.
         const AD_CONFIG = {
-            appId: "000192"
+            blockId: "int-37429",
+            // Set to false before publishing to production. In debug
+            // mode, AdsGram serves a fake test creative and does NOT
+            // count impressions or pay out.
+            debug: false
         };
 
         let sdkReady = false;
         let sdkInitAttempted = false;
+        let adController = null;
 
         // Initialize Telegram Web App
         let tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -429,12 +439,12 @@
         }
 
         function onSdkLoaded() {
-            console.log('[AdFlow] AdsBitvex script tag loaded');
+            console.log('[AdFlow] AdsGram script tag loaded');
             initSdk();
         }
 
         function onSdkFailed() {
-            console.error('[AdFlow] AdsBitvex script FAILED to load (network/blocked/wrong URL)');
+            console.error('[AdFlow] AdsGram script FAILED to load (network/blocked/wrong URL)');
             setSdkBadge('failed to load', false);
             showTestModeNotice('Ad SDK failed to load — running in test mode.');
         }
@@ -443,20 +453,30 @@
             if (sdkInitAttempted) return;
             sdkInitAttempted = true;
 
-            // AdsBitvex's real API exposes window.showadsbitvex() (reward ad)
-            // and window.showadsbitvex_init() (fast interstitial). There is
-            // no separate init/config call — the appid in the script URL
-            // handles that server-side.
-            if (typeof window.showadsbitvex !== 'function') {
-                console.error('[AdFlow] Script loaded but window.showadsbitvex is not a function yet.');
+            if (typeof window.Adsgram === 'undefined' || typeof window.Adsgram.init !== 'function') {
+                console.error('[AdFlow] Script loaded but window.Adsgram.init is not available yet.');
                 setSdkBadge('function missing', false);
                 showTestModeNotice('Ad SDK function not found — running in test mode.');
                 return;
             }
 
+            if (AD_CONFIG.blockId === "YOUR_ADSGRAM_BLOCK_ID") {
+                console.warn('[AdFlow] blockId not configured — get one from partner.adsgram.ai');
+                setSdkBadge('blockId not set', false);
+                showTestModeNotice('AdsGram blockId not configured — running in test mode.');
+                return;
+            }
+
+            // AdController is created once per blockId and reused for
+            // every subsequent .show() call (per AdsGram docs).
+            adController = window.Adsgram.init({
+                blockId: AD_CONFIG.blockId,
+                debug: AD_CONFIG.debug
+            });
+
             sdkReady = true;
-            setSdkBadge('ready', true);
-            console.log('[AdFlow] AdsBitvex ready, appid=', AD_CONFIG.appId);
+            setSdkBadge(AD_CONFIG.debug ? 'ready (debug mode)' : 'ready', true);
+            console.log('[AdFlow] AdsGram ready, blockId=', AD_CONFIG.blockId, 'debug=', AD_CONFIG.debug);
         }
 
         function showTestModeNotice(msg) {
@@ -468,11 +488,11 @@
         // Fallback: if onload never fires (e.g. cached weirdly) check after 4s
         setTimeout(() => {
             if (!sdkInitAttempted) {
-                if (typeof window.showadsbitvex === 'function') {
-                    console.warn('[AdFlow] onload never fired but showadsbitvex is present — initializing late');
+                if (typeof window.Adsgram !== 'undefined') {
+                    console.warn('[AdFlow] onload never fired but Adsgram is present — initializing late');
                     initSdk();
                 } else {
-                    console.error('[AdFlow] showadsbitvex still not available after timeout');
+                    console.error('[AdFlow] Adsgram still not available after timeout');
                     setSdkBadge('not detected', false);
                     showTestModeNotice('Ad SDK not detected — running in test mode.');
                 }
@@ -542,16 +562,21 @@
             btn.disabled = true;
             btn.textContent = 'Loading ad...';
 
-            if (sdkReady && typeof window.showadsbitvex === 'function') {
-                console.log('[AdFlow] Requesting reward ad via window.showadsbitvex()...');
-                window.showadsbitvex()
-                    .then(function() {
-                        console.log('[AdFlow] Ad completed, rewarding user');
+            if (sdkReady && adController) {
+                console.log('[AdFlow] Requesting reward ad via AdsGram AdController.show()...');
+                adController.show()
+                    .then(function(result) {
+                        // result: { done: true, state: 'destroy', ... }
+                        // per AdsGram docs, resolving the promise means the
+                        // user watched the ad through (or closed an
+                        // interstitial) — this is the reward trigger point.
+                        console.log('[AdFlow] Ad completed, rewarding user', result);
                         const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
                         addReward(parseFloat(reward), false);
                     })
-                    .catch(function(e) {
-                        console.error('[AdFlow] Ad error:', e);
+                    .catch(function(result) {
+                        // result: { error: true, done: false, state, description }
+                        console.error('[AdFlow] Ad error:', result);
                         showToast('Ad failed to load — no fill available');
                     })
                     .finally(function() {
@@ -675,4 +700,4 @@
         resetDaily();
     </script>
 </body>
-                    </html>
+</html>
