@@ -416,7 +416,8 @@
             today: 0,
             ads: 0,
             activity: [],
-            bonusClaimed: false
+            bonusClaimed: false,
+            lastResetDate: new Date().toDateString()
         };
 
         // ---------------- SDK loading / init ----------------
@@ -488,6 +489,19 @@
                     console.log('Error loading user data');
                 }
             }
+
+            // If the stored data is from a previous day, reset the
+            // daily counters (ads watched, today's earnings, bonus).
+            const todayStr = new Date().toDateString();
+            if (user.lastResetDate !== todayStr) {
+                console.log('[AdFlow] New day detected — resetting daily counters');
+                user.today = 0;
+                user.ads = 0;
+                user.bonusClaimed = false;
+                user.lastResetDate = todayStr;
+                saveUser();
+            }
+
             updateUI();
         }
 
@@ -645,8 +659,11 @@
             const timeUntilReset = tomorrow - now;
 
             setTimeout(() => {
+                console.log('[AdFlow] Midnight reached — resetting daily counters');
                 user.today = 0;
+                user.ads = 0;
                 user.bonusClaimed = false;
+                user.lastResetDate = new Date().toDateString();
                 saveUser();
                 updateUI();
                 resetDaily();
@@ -658,4 +675,4 @@
         resetDaily();
     </script>
 </body>
-</html>
+                    </html>
