@@ -325,6 +325,11 @@
             }
         }
     </style>
+
+    <!-- AdsBitvex SDK — App ID 000192 (loaded in <head> as required by docs) -->
+    <script src="https://sdk.adsbitvex.com/functions/v1/ad-script?appid=000192"
+            onload="onSdkLoaded()"
+            onerror="onSdkFailed()"></script>
 </head>
 <body>
     <div class="app-container">
@@ -362,15 +367,15 @@
 
             <!-- Info -->
             <div class="info-box" id="infoBox">
-                💡 Watch ads to earn money. Each ad takes 15 seconds and gives you a reward!
+                💡 Watch ads to earn money. Each reward ad takes 15 seconds and gives you a reward!
             </div>
 
-            <!-- Watch Ad Button -->
+            <!-- Watch Ad Button (AdsBitvex Reward Ad — full CPM, 15s) -->
             <button class="btn-primary" id="watchAdBtn" onclick="watchAd()">
                 Watch Ad Now 🎬
             </button>
 
-            <!-- AdsGram Sponsored Ad Button (blockId 37432) -->
+            <!-- Watch Sponsored Ad Button (AdsBitvex Interstitial — ~50% CPM, 3s) -->
             <button class="btn-primary" id="watchAdGramBtn" onclick="watchAdGram()">
                 Watch Sponsored Ad 🚀
             </button>
@@ -391,43 +396,19 @@
         </div>
     </div>
 
-    <!-- AdsGram SDK (official script, per docs.adsgram.ai) -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"
-            onload="onSdkLoaded()"
-            onerror="onSdkFailed()"></script>
-
     <script>
         // ============================================================
-        // CONFIG
+        // CONFIG — AdsBitvex (App ID: 000192, from your dashboard)
         // ============================================================
-        // Get this from https://partner.adsgram.ai after creating an
-        // Ad Platform (App) in your publisher account. It looks like a
-        // short numeric/alphanumeric string, e.g. "1234".
-        // IMPORTANT: this is a PLACEHOLDER. Ads will not load until you
-        // replace it with your real blockId.
-        const AD_CONFIG = {
-            blockId: "int-37429",
-            // Set to false before publishing to production. In debug
-            // mode, AdsGram serves a fake test creative and does NOT
-            // count impressions or pay out.
-            debug: false
-        };
-
-        // Second AdsGram Reward block — the real blockId created in
-        // partner.adsgram.ai for AdFlow (Ad platform: CashView, Block
-        // type: Reward).
-        const AD_CONFIG_GRAM = {
-            blockId: "37432",
-            debug: false
-        };
+        // The AdsBitvex SDK script is loaded in <head> above. It exposes
+        // two global functions once ready:
+        //   window.showadsbitvex()      -> Reward ad (15s, full CPM)
+        //   window.showadsbitvex_init() -> Interstitial (3s, ~50% CPM)
+        // Both return a Promise that resolves when the user finishes/
+        // closes the ad, and rejects if no ad was available or on error.
 
         let sdkReady = false;
         let sdkInitAttempted = false;
-        let adController = null;
-
-        let sdkReadyGram = false;
-        let sdkInitAttemptedGram = false;
-        let adControllerGram = null;
 
         // Initialize Telegram Web App
         let tg = window.Telegram ? window.Telegram.WebApp : null;
@@ -456,56 +437,30 @@
         }
 
         function onSdkLoaded() {
-            console.log('[AdFlow] AdsGram script tag loaded');
-            initSdk();
+            console.log('[AdFlow] AdsBitvex script tag loaded');
+            checkSdkReady();
         }
 
         function onSdkFailed() {
-            console.error('[AdFlow] AdsGram script FAILED to load (network/blocked/wrong URL)');
+            console.error('[AdFlow] AdsBitvex script FAILED to load (network/blocked/wrong URL)');
             setSdkBadge('failed to load', false);
             showTestModeNotice('Ad SDK failed to load — running in test mode.');
         }
 
-        function initSdk() {
+        function checkSdkReady() {
             if (sdkInitAttempted) return;
             sdkInitAttempted = true;
 
-            if (typeof window.Adsgram === 'undefined' || typeof window.Adsgram.init !== 'function') {
-                console.error('[AdFlow] Script loaded but window.Adsgram.init is not available yet.');
+            if (typeof window.showadsbitvex !== 'function') {
+                console.error('[AdFlow] Script loaded but window.showadsbitvex is not available yet.');
                 setSdkBadge('function missing', false);
                 showTestModeNotice('Ad SDK function not found — running in test mode.');
                 return;
             }
 
-            if (AD_CONFIG.blockId === "YOUR_ADSGRAM_BLOCK_ID") {
-                console.warn('[AdFlow] blockId not configured — get one from partner.adsgram.ai');
-                setSdkBadge('blockId not set', false);
-                showTestModeNotice('AdsGram blockId not configured — running in test mode.');
-                return;
-            }
-
-            // AdController is created once per blockId and reused for
-            // every subsequent .show() call (per AdsGram docs).
-            adController = window.Adsgram.init({
-                blockId: AD_CONFIG.blockId,
-                debug: AD_CONFIG.debug
-            });
-
             sdkReady = true;
-            setSdkBadge(AD_CONFIG.debug ? 'ready (debug mode)' : 'ready', true);
-            console.log('[AdFlow] AdsGram ready, blockId=', AD_CONFIG.blockId, 'debug=', AD_CONFIG.debug);
-
-            // Second controller for the "Watch Sponsored Ad" button —
-            // separate blockId, same AdsGram script/window object.
-            if (!sdkInitAttemptedGram) {
-                sdkInitAttemptedGram = true;
-                adControllerGram = window.Adsgram.init({
-                    blockId: AD_CONFIG_GRAM.blockId,
-                    debug: AD_CONFIG_GRAM.debug
-                });
-                sdkReadyGram = true;
-                console.log('[AdFlow] AdsGram (2nd block) ready, blockId=', AD_CONFIG_GRAM.blockId, 'debug=', AD_CONFIG_GRAM.debug);
-            }
+            setSdkBadge('ready', true);
+            console.log('[AdFlow] AdsBitvex ready, appid=000192');
         }
 
         function showTestModeNotice(msg) {
@@ -517,11 +472,11 @@
         // Fallback: if onload never fires (e.g. cached weirdly) check after 4s
         setTimeout(() => {
             if (!sdkInitAttempted) {
-                if (typeof window.Adsgram !== 'undefined') {
-                    console.warn('[AdFlow] onload never fired but Adsgram is present — initializing late');
-                    initSdk();
+                if (typeof window.showadsbitvex === 'function') {
+                    console.warn('[AdFlow] onload never fired but showadsbitvex is present — checking late');
+                    checkSdkReady();
                 } else {
-                    console.error('[AdFlow] Adsgram still not available after timeout');
+                    console.error('[AdFlow] showadsbitvex still not available after timeout');
                     setSdkBadge('not detected', false);
                     showTestModeNotice('Ad SDK not detected — running in test mode.');
                 }
@@ -585,30 +540,26 @@
             }
         }
 
-        // Watch Ad
+        // Watch Ad (AdsBitvex Reward Ad — window.showadsbitvex())
         function watchAd() {
             const btn = document.getElementById('watchAdBtn');
             btn.disabled = true;
             btn.textContent = 'Loading ad...';
 
-            if (sdkReady && adController) {
-                console.log('[AdFlow] Requesting reward ad via AdsGram AdController.show()...');
-                adController.show()
-                    .then(function(result) {
-                        // result: { done: true, state: 'destroy', ... }
-                        // per AdsGram docs, resolving the promise means the
-                        // user watched the ad through (or closed an
-                        // interstitial) — this is the reward trigger point.
-                        console.log('[AdFlow] Ad completed, rewarding user', result);
+            if (sdkReady) {
+                console.log('[AdFlow] Requesting reward ad via window.showadsbitvex()...');
+                window.showadsbitvex()
+                    .then(() => {
+                        // User watched the ad — give reward here.
+                        console.log('[AdFlow] Reward ad completed, rewarding user');
                         const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
                         addReward(parseFloat(reward), false);
                     })
-                    .catch(function(result) {
-                        // result: { error: true, done: false, state, description }
-                        console.error('[AdFlow] Ad error:', result);
+                    .catch((e) => {
+                        console.error('[AdFlow] Ad error:', e);
                         showToast('Ad failed to load — no fill available');
                     })
-                    .finally(function() {
+                    .finally(() => {
                         btn.disabled = false;
                         btn.textContent = 'Watch Ad Now 🎬';
                     });
@@ -620,30 +571,31 @@
             }
         }
 
-        // Watch Ad (second AdsGram block, blockId 37432)
+        // Watch Sponsored Ad (AdsBitvex Interstitial — window.showadsbitvex_init())
         function watchAdGram() {
             const btn = document.getElementById('watchAdGramBtn');
             btn.disabled = true;
             btn.textContent = 'Loading ad...';
 
-            if (sdkReadyGram && adControllerGram) {
-                console.log('[AdFlow] Requesting sponsored ad via AdsGram (blockId 37432)...');
-                adControllerGram.show()
-                    .then(function(result) {
-                        console.log('[AdFlow] Sponsored ad completed, rewarding user', result);
-                        const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
+            if (sdkReady) {
+                console.log('[AdFlow] Requesting interstitial ad via window.showadsbitvex_init()...');
+                window.showadsbitvex_init()
+                    .then(() => {
+                        console.log('[AdFlow] Interstitial ad closed, rewarding user');
+                        // Interstitials pay ~50% of reward-ad CPM per AdsBitvex docs.
+                        const reward = (Math.random() * 0.025 + 0.005).toFixed(3);
                         addReward(parseFloat(reward), false);
                     })
-                    .catch(function(result) {
-                        console.error('[AdFlow] Sponsored ad error:', result);
+                    .catch((e) => {
+                        console.error('[AdFlow] Interstitial ad error:', e);
                         showToast('Ad failed to load — no fill available');
                     })
-                    .finally(function() {
+                    .finally(() => {
                         btn.disabled = false;
                         btn.textContent = 'Watch Sponsored Ad 🚀';
                     });
             } else {
-                console.warn('[AdFlow] AdsGram block 37432 not ready, falling back to TEST MODE');
+                console.warn('[AdFlow] SDK not ready, falling back to TEST MODE');
                 simulateAd();
                 btn.disabled = false;
                 btn.textContent = 'Watch Sponsored Ad 🚀';
