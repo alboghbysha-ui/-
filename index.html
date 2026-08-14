@@ -243,20 +243,38 @@ function watchAdexoraAd() {
 let onClckVdShow = null;
 let onClckVdReady = false;
 
-// مقداردهی اولیه SDK به محض بارگذاری صفحه (طبق مستندات OnClckVd)
-window.initCdTma?.({ id: '452611' })
-    .then((show) => {
-        onClckVdShow = show;
-        onClckVdReady = true;
-        console.log('✅ OnClckVd آماده شد');
-    })
-    .catch((e) => {
-        console.warn('⚠️ OnClckVd SDK بارگذاری نشد', e);
-    });
+function initOnClckVd(attemptsLeft) {
+    if (typeof window.initCdTma !== 'function') {
+        if (attemptsLeft > 0) {
+            // اسکریپت هنوز لود نشده، دوباره امتحان کن
+            setTimeout(() => initOnClckVd(attemptsLeft - 1), 500);
+        } else {
+            console.warn('⚠️ initCdTma هیچ‌وقت در دسترس قرار نگرفت - اسکریپت SDK لود نشد');
+        }
+        return;
+    }
+    window.initCdTma({ id: '452611' })
+        .then((show) => {
+            onClckVdShow = show;
+            onClckVdReady = true;
+            console.log('✅ OnClckVd آماده شد');
+        })
+        .catch((e) => {
+            console.warn('⚠️ initCdTma اجرا شد ولی خطا داد', e);
+        });
+}
+
+// شروع تلاش برای init (حداکثر 10 بار هر نیم ثانیه = 5 ثانیه صبر)
+initOnClckVd(10);
 
 function watchOnClckVdAd() {
+    if (typeof window.initCdTma !== 'function') {
+        showNotification("❌ اسکریپت OnClckVd لود نشد (احتمالاً ادبلاکر یا اتصال)");
+        console.error('window.initCdTma تعریف نشده - چک کن اسکریپت tma.js لود شده باشه (Network tab)');
+        return;
+    }
     if (!onClckVdReady || typeof onClckVdShow !== 'function') {
-        showNotification("❌ SDK OnClckVd بارگذاری نشده یا آماده نیست");
+        showNotification("❌ SDK OnClckVd هنوز آماده نیست، چند ثانیه صبر کن");
         return;
     }
     onClckVdShow()
@@ -377,4 +395,3 @@ if (window.Telegram && window.Telegram.WebApp) {
 </script>
 </body>
 </html>
-
