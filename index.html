@@ -12,11 +12,8 @@
 <!-- 2. Adexora SDK -->
 <script src="https://adexora.com/cdn/ads.js?id=2126"></script>
 
-<!-- 3. OnClickA SDK -->
-<script src="https://cdn.onclicka.com/ads/onclicka.js"></script>
-
-<!-- 4. Anti AdBlock OnClickA -->
-<script async src="https://js.onclickca.com/static/onclicka.js" data-admpid="447354"></script>
+<!-- 3. OnClckVd (TMA In-Stream Ad) SDK -->
+<script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
 
 <!-- 5. GigaPub SDK -->
 <script src="https://ad.gigapub.tech/script?id=7188"></script>
@@ -103,9 +100,9 @@ body{margin:0;padding:20px;font-family:tahoma,sans-serif;background:#0f172a;colo
 </div>
 
 <div class="ad-card">
-<h3>🚀 تبلیغ OnClickA</h3>
+<h3>🚀 تبلیغ OnClckVd</h3>
 <p>پاداش: 12 سکه</p>
-<button class="btn onclicka" onclick="watchOnClickAAd()">مشاهده تبلیغ OnClickA</button>
+<button class="btn onclicka" onclick="watchOnClckVdAd()">مشاهده تبلیغ OnClckVd</button>
 </div>
 
 <div class="ad-card">
@@ -241,42 +238,36 @@ function watchAdexoraAd() {
 }
 
 // ================================================
-// 4. تبلیغ OnClickA
+// 4. تبلیغ OnClckVd (In-Stream Ad)
 // ================================================
-function watchOnClickAAd() {
-    if (typeof window.OnClickA !== 'undefined' && typeof window.OnClickA.showRewarded === 'function') {
-        try {
-            window.OnClickA.showRewarded({
-                placementId: '6122246',
-                onReward: () => addReward(12),
-                onError: (error) => {
-                    console.error('OnClickA Error:', error);
-                    showNotification("❌ خطا در نمایش تبلیغ OnClickA");
-                }
-            });
-            return;
-        } catch (e) {
-            showNotification("❌ خطا در نمایش تبلیغ");
-            return;
-        }
-    }
+let onClckVdShow = null;
+let onClckVdReady = false;
 
-    if (typeof window.showOnClickA === 'function') {
-        try {
-            window.showOnClickA()
-                .then(() => addReward(12))
-                .catch((e) => {
-                    console.error(e);
-                    showNotification("❌ خطا در نمایش تبلیغ OnClickA");
-                });
-            return;
-        } catch (e) {
-            showNotification("❌ خطا در نمایش تبلیغ");
-            return;
-        }
-    }
+// مقداردهی اولیه SDK به محض بارگذاری صفحه (طبق مستندات OnClckVd)
+window.initCdTma?.({ id: '452611' })
+    .then((show) => {
+        onClckVdShow = show;
+        onClckVdReady = true;
+        console.log('✅ OnClckVd آماده شد');
+    })
+    .catch((e) => {
+        console.warn('⚠️ OnClckVd SDK بارگذاری نشد', e);
+    });
 
-    showNotification("❌ SDK OnClickA بارگذاری نشده");
+function watchOnClckVdAd() {
+    if (!onClckVdReady || typeof onClckVdShow !== 'function') {
+        showNotification("❌ SDK OnClckVd بارگذاری نشده یا آماده نیست");
+        return;
+    }
+    onClckVdShow()
+        .then(() => {
+            console.log('tma ad played');
+            addReward(12);
+        })
+        .catch((e) => {
+            console.log(e);
+            showNotification("❌ خطا در نمایش تبلیغ OnClckVd");
+        });
 }
 
 // ================================================
@@ -386,3 +377,4 @@ if (window.Telegram && window.Telegram.WebApp) {
 </script>
 </body>
 </html>
+
