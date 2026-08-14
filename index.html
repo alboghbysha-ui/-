@@ -25,6 +25,35 @@
 <!-- اتصال Telegram WebApp (طبق مستندات core.telegram.org) -->
 <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
 
+<!-- 8. Adexium SDK (تبلیغ interstitial خودکار) -->
+<script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        const adexiumWidget = new AdexiumWidget({wid: '2aeda7fe-3afd-4ef4-85bd-c3c25cdfc0b6', adFormat: 'interstitial'});
+        adexiumWidget.autoMode();
+    });
+</script>
+
+<!-- 9. Adexium SDK (تبلیغ push-like با دکمه دستی) -->
+<script type="text/javascript">
+    let adexiumPushWidget = null;
+    document.addEventListener('DOMContentLoaded', () => {
+        adexiumPushWidget = new AdexiumWidget({wid: '6b6fb9fb-5697-4919-9f8d-2e3f9168e00f', adFormat: 'push-like'});
+
+        adexiumPushWidget.on('adReceived', (ad) => {
+            adexiumPushWidget.displayAd(ad);
+        });
+
+        adexiumPushWidget.on('noAdFound', () => {
+            window.showNotification && window.showNotification("❌ تبلیغی برای نمایش پیدا نشد");
+        });
+
+        adexiumPushWidget.on('adPlaybackCompleted', () => {
+            window.addReward && window.addReward(7);
+        });
+    });
+</script>
+
 <!-- 7. RichAds SDK -->
 <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
 <script>
@@ -55,6 +84,7 @@ body{margin:0;padding:20px;font-family:tahoma,sans-serif;background:#0f172a;colo
 .gigapub{background:linear-gradient(135deg,#ec4899,#f472b6)}
 .towerads{background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
 .richads{background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.adexium{background:linear-gradient(135deg,#059669,#10b981)}
 .reset-btn{background:linear-gradient(135deg,#dc2626,#ef4444);color:white;margin-top:10px}
 .footer{text-align:center;margin-top:20px;color:#94a3b8;font-size:14px}
 .coin-animation{display:inline-block;transition:transform 0.3s}
@@ -117,9 +147,20 @@ body{margin:0;padding:20px;font-family:tahoma,sans-serif;background:#0f172a;colo
 <button class="btn richads" onclick="watchRichAd()">مشاهده تبلیغ RichAds</button>
 </div>
 
+<div class="ad-card">
+<h3>🎯 تبلیغ Adexium (خودکار)</h3>
+<p>این تبلیغ به‌صورت خودکار (autoMode) در زمان مناسب نمایش داده می‌شود و نیازی به دکمه ندارد.</p>
+</div>
+
+<div class="ad-card">
+<h3>📢 تبلیغ Adexium (Push)</h3>
+<p>پاداش: 7 سکه</p>
+<button class="btn adexium" onclick="watchAdexiumPushAd()">مشاهده تبلیغ Push</button>
+</div>
+
 <button class="btn reset-btn" onclick="resetData()">🔄 Reset</button>
 
-<div class="footer">Monetag + Adexora + OnClickA + GigaPub + TowerAds + RichAds</div>
+<div class="footer">Monetag + Adexora + OnClckVd + GigaPub + TowerAds + RichAds + Adexium</div>
 </div>
 
 <script>
@@ -372,6 +413,22 @@ function watchRichAd() {
 }
 
 // ================================================
+// 8. تبلیغ Adexium (Push-like, دستی)
+// ================================================
+function watchAdexiumPushAd() {
+    if (typeof adexiumPushWidget === 'undefined' || !adexiumPushWidget) {
+        showNotification("❌ SDK Adexium بارگذاری نشده");
+        return;
+    }
+    try {
+        adexiumPushWidget.requestAd('push-like');
+    } catch (e) {
+        console.error('Adexium error:', e);
+        showNotification("❌ خطا در نمایش تبلیغ Adexium");
+    }
+}
+
+// ================================================
 // Reset data
 // ================================================
 function resetData() {
@@ -395,3 +452,4 @@ if (window.Telegram && window.Telegram.WebApp) {
 </script>
 </body>
 </html>
+
