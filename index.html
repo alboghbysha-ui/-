@@ -1,714 +1,389 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AdFlow - Earn Money Watching Ads</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Rewards Pro</title>
 
-    <!-- Telegram Web App SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- ===== SDK های تبلیغاتی ===== -->
+<!-- 1. Monetag SDK -->
+<script src="//libtl.com/sdk.js" data-zone="11245827" data-sdk="show_11245827"></script>
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<!-- 2. Adexora SDK -->
+<script src="https://adexora.com/cdn/ads.js?id=2126"></script>
 
-        html, body {
-            width: 100%;
-            height: 100%;
-        }
+<!-- 3. OnClickA SDK -->
+<script src="https://cdn.onclicka.com/ads/onclicka.js"></script>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #2b0a3d 0%, #1a0a2e 100%);
-            color: #ffffff;
-            overflow: hidden;
-        }
+<!-- 4. Anti AdBlock OnClickA -->
+<script async src="https://js.onclickca.com/static/onclicka.js" data-admpid="447354"></script>
 
-        .app-container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            padding-bottom: 20px;
-        }
+<!-- 5. GigaPub SDK -->
+<script src="https://ad.gigapub.tech/script?id=7188"></script>
 
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #6a1b9a 0%, #2b0a3d 100%);
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
+<!-- 6. TowerAds SDK -->
+<script src="https://uslads.com/sdk/tower-ads-v4.js"></script>
 
-        .logo-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
+<!-- ===== Telegram Mini App (طبق مستندات رسمی) ===== -->
+<!-- اتصال Telegram WebApp (طبق مستندات core.telegram.org) -->
+<script src="https://telegram.org/js/telegram-web-app.js?56"></script>
 
-        .app-name {
-            font-size: 28px;
-            font-weight: bold;
-            color: #ff4da6;
-            margin-bottom: 5px;
-        }
+<!-- 7. RichAds SDK -->
+<script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+<script>
+  window.richadsController = new TelegramAdsController();
+  window.richadsController.initialize({
+    pubId: "1016530",
+    appId: "8510",
+  });
+</script>
 
-        .app-tagline {
-            font-size: 14px;
-            color: #a0a0a0;
-        }
-
-        /* Debug badge */
-        .debug-badge {
-            font-size: 11px;
-            margin-top: 8px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
-        .debug-badge.ok {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            border: 1px solid rgba(46, 204, 113, 0.4);
-        }
-
-        .debug-badge.warn {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-            border: 1px solid rgba(231, 76, 60, 0.4);
-        }
-
-        /* Main Content */
-        .content {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        /* Earnings Card */
-        .balance-card {
-            background: linear-gradient(135deg, #ff4da6 0%, #9c27b0 100%);
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 20px;
-            color: white;
-            box-shadow: 0 10px 30px rgba(255, 77, 166, 0.3);
-        }
-
-        .balance-label {
-            font-size: 13px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .balance-amount {
-            font-size: 42px;
-            font-weight: bold;
-            font-variant-numeric: tabular-nums;
-            margin-bottom: 15px;
-        }
-
-        .balance-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #a0a0a0;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ff4da6;
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* Buttons */
-        .btn-primary {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #ff4da6 0%, #9c27b0 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(255, 77, 166, 0.3);
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            flex: 1;
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-secondary:active {
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(0.98);
-        }
-
-        .btn-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        /* Activity List */
-        .activity-section {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .activity-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #ffffff;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .activity-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .activity-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 13px;
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-time {
-            color: #a0a0a0;
-        }
-
-        .activity-reward {
-            color: #ff4da6;
-            font-weight: 600;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: #a0a0a0;
-            padding: 20px;
-        }
-
-        /* Info Box */
-        .info-box {
-            background: rgba(255, 77, 166, 0.1);
-            border-left: 3px solid #ff4da6;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #e0e0e0;
-        }
-
-        .info-box.warn {
-            background: rgba(231, 76, 60, 0.1);
-            border-left-color: #e74c3c;
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #ff4da6;
-            color: #1a0a2e;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            z-index: 1000;
-            animation: slideUp 0.3s ease;
-            max-width: 85%;
-            text-align: center;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        /* Scrollbar */
-        .app-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .app-container::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .app-container::-webkit-scrollbar-thumb {
-            background: rgba(0, 212, 255, 0.3);
-            border-radius: 3px;
-        }
-
-        /* Responsive */
-        @media (max-height: 600px) {
-            .balance-card {
-                padding: 15px;
-            }
-
-            .balance-amount {
-                font-size: 32px;
-            }
-        }
-    </style>
-
-    <!-- AdsBitvex SDK — App ID 000192 (loaded in <head> as required by docs) -->
-    <script src="https://sdk.adsbitvex.com/functions/v1/ad-script?appid=000192"
-            onload="onSdkLoaded()"
-            onerror="onSdkFailed()"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px;font-family:tahoma,sans-serif;background:#0f172a;color:white;min-height:100vh}
+.container{max-width:500px;margin:auto}
+.header{text-align:center;margin-bottom:20px}
+.header h1{background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.balance-card,.ad-card{background:#1e293b;border-radius:20px;padding:20px;margin-bottom:15px;border:1px solid #334155;transition:0.3s}
+.ad-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+.balance{text-align:center;font-size:40px;font-weight:bold}
+.stats{text-align:center;margin-top:10px;color:#cbd5e1}
+.btn{width:100%;border:none;border-radius:14px;padding:16px;font-size:18px;font-weight:bold;cursor:pointer;transition:0.2s;color:white}
+.btn:hover{opacity:0.85;transform:scale(0.98)}
+.btn:active{transform:scale(0.95)}
+.reward{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+.popup{background:linear-gradient(135deg,#16a34a,#22c55e)}
+.adexora{background:linear-gradient(135deg,#ea580c,#f97316)}
+.onclicka{background:linear-gradient(135deg,#8b5cf6,#a78bfa)}
+.gigapub{background:linear-gradient(135deg,#ec4899,#f472b6)}
+.towerads{background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
+.richads{background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.reset-btn{background:linear-gradient(135deg,#dc2626,#ef4444);color:white;margin-top:10px}
+.footer{text-align:center;margin-top:20px;color:#94a3b8;font-size:14px}
+.coin-animation{display:inline-block;transition:transform 0.3s}
+.coin-animation.bounce{animation:bounce 0.5s}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+.notification{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e293b;padding:12px 24px;border-radius:12px;border:1px solid #334155;z-index:1000;display:none;min-width:200px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.5)}
+.notification.show{display:block;animation:slideDown 0.3s}
+@keyframes slideDown{from{top:-50px;opacity:0}to{top:20px;opacity:1}}
+</style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo-icon">🧪</div>
-            <div class="app-name">AdFlow 🧪TEST</div>
-            <div class="app-tagline">Earn money watching ads</div>
-            <div class="debug-badge warn" id="sdkStatus">SDK: checking...</div>
-        </div>
+<div class="container">
+<div class="header"><h1>💰 Coin Rewards Pro</h1></div>
 
-        <!-- Main Content -->
-        <div class="content">
-            <!-- Balance Card -->
-            <div class="balance-card">
-                <div class="balance-label">Total Balance</div>
-                <div class="balance-amount" id="balanceAmount">$0.00</div>
-                <div class="balance-info">
-                    <span>Today: <strong id="todayAmount">$0.00</strong></span>
-                    <span>Ads Watched: <strong id="adCountDisplay">0</strong></span>
-                </div>
-            </div>
+<div class="balance-card">
+<div class="balance">🪙 <span id="coins" class="coin-animation">0</span></div>
+<div class="stats">تبلیغات دیده شده: <span id="adsSeen">0</span></div>
+<div class="stats">سکه‌های کل: <span id="totalCoins">0</span></div>
+</div>
 
-            <!-- Stats -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Ads Completed</div>
-                    <div class="stat-value" id="statsAds">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Daily Earnings</div>
-                    <div class="stat-value" id="statsDaily">$0.00</div>
-                </div>
-            </div>
+<div class="ad-card">
+<h3>🗼 تبلیغ جایزه‌ای TowerAds</h3>
+<p>پاداش: 10 سکه</p>
+<button class="btn towerads" onclick="watchTowerAd()">مشاهده تبلیغ TowerAds</button>
+</div>
 
-            <!-- Info -->
-            <div class="info-box" id="infoBox">
-                💡 Watch ads to earn money. Each reward ad takes 15 seconds and gives you a reward!
-            </div>
+<div class="ad-card">
+<h3>🎥 تبلیغ جایزه‌ای Monetag</h3>
+<p>پاداش: 10 سکه</p>
+<button class="btn reward" onclick="watchRewardedAd()">مشاهده تبلیغ</button>
+</div>
 
-            <!-- Watch Ad Button (AdsBitvex Reward Ad — full CPM, 15s) -->
-            <button class="btn-primary" id="watchAdBtn" onclick="watchAd()">
-                Watch Ad Now 🎬
-            </button>
+<div class="ad-card">
+<h3>🪟 تبلیغ پاپ‌آپ Monetag</h3>
+<p>پاداش: 5 سکه</p>
+<button class="btn popup" onclick="watchPopupAd()">نمایش پاپ‌آپ</button>
+</div>
 
-            <!-- Watch Sponsored Ad Button (AdsBitvex Interstitial — ~50% CPM, 3s) -->
-            <button class="btn-primary" id="watchAdGramBtn" onclick="watchAdGram()">
-                Watch Sponsored Ad 🚀
-            </button>
+<div class="ad-card">
+<h3>🔥 تبلیغ Adexora</h3>
+<p>پاداش: 8 سکه</p>
+<button class="btn adexora" onclick="watchAdexoraAd()">مشاهده تبلیغ Adexora</button>
+</div>
 
-            <!-- Quick Actions -->
-            <div class="btn-row">
-                <button class="btn-secondary" onclick="claimDaily()">🎁 Claim Bonus</button>
-                <button class="btn-secondary" onclick="shareApp()">📤 Share</button>
-            </div>
+<div class="ad-card">
+<h3>🚀 تبلیغ OnClickA</h3>
+<p>پاداش: 12 سکه</p>
+<button class="btn onclicka" onclick="watchOnClickAAd()">مشاهده تبلیغ OnClickA</button>
+</div>
 
-            <!-- Activity -->
-            <div class="activity-section">
-                <div class="activity-title">Recent Activity</div>
-                <div class="activity-list" id="activityList">
-                    <div class="empty-state">No activity yet</div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="ad-card">
+<h3>💎 تبلیغ GigaPub</h3>
+<p>پاداش: 15 سکه</p>
+<button class="btn gigapub" onclick="watchGigaPubAd()">مشاهده تبلیغ GigaPub</button>
+</div>
 
-    <script>
-        // ============================================================
-        // CONFIG — AdsBitvex (App ID: 000192, from your dashboard)
-        // ============================================================
-        // The AdsBitvex SDK script is loaded in <head> above. It exposes
-        // two global functions once ready:
-        //   window.showadsbitvex()      -> Reward ad (15s, full CPM)
-        //   window.showadsbitvex_init() -> Interstitial (3s, ~50% CPM)
-        // Both return a Promise that resolves when the user finishes/
-        // closes the ad, and rejects if no ad was available or on error.
+<div class="ad-card">
+<h3>⭐ تبلیغ ویدیویی RichAds</h3>
+<p>پاداش: 10 سکه</p>
+<button class="btn richads" onclick="watchRichAd()">مشاهده تبلیغ RichAds</button>
+</div>
 
-        let sdkReady = false;
-        let sdkInitAttempted = false;
+<button class="btn reset-btn" onclick="resetData()">🔄 Reset</button>
 
-        // Initialize Telegram Web App
-        let tg = window.Telegram ? window.Telegram.WebApp : null;
-        if (tg) {
-            tg.expand();
-            tg.setBackgroundColor("#1a1a2e");
-            tg.setHeaderColor("#0f3460");
+<div class="footer">Monetag + Adexora + OnClickA + GigaPub + TowerAds + RichAds</div>
+</div>
+
+<script>
+// ================================================
+// داده‌ها
+// ================================================
+let coins = Number(localStorage.getItem("coins")) || 0;
+let adsSeen = Number(localStorage.getItem("adsSeen")) || 0;
+let totalCoins = Number(localStorage.getItem("totalCoins")) || 0;
+
+function saveData() {
+    localStorage.setItem("coins", coins);
+    localStorage.setItem("adsSeen", adsSeen);
+    localStorage.setItem("totalCoins", totalCoins);
+}
+
+function updateUI() {
+    document.getElementById("coins").innerText = coins;
+    document.getElementById("adsSeen").innerText = adsSeen;
+    document.getElementById("totalCoins").innerText = totalCoins;
+}
+
+function addReward(amount) {
+    coins += amount;
+    totalCoins += amount;
+    adsSeen++;
+    saveData();
+    updateUI();
+    animateCoin();
+    showNotification(`✅ ${amount} سکه دریافت کردی 🎉`);
+}
+
+function animateCoin() {
+    const coin = document.getElementById("coins");
+    coin.classList.remove("bounce");
+    setTimeout(() => coin.classList.add("bounce"), 10);
+}
+
+function showNotification(message) {
+    const notif = document.createElement('div');
+    notif.className = 'notification show';
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    setTimeout(() => {
+        notif.classList.remove('show');
+        setTimeout(() => notif.remove(), 300);
+    }, 2000);
+}
+
+updateUI();
+
+// ================================================
+// تابع کمکی برای بررسی وجود SDK
+// ================================================
+function isReady(sdkName, checkFn) {
+    if (typeof checkFn === 'function') {
+        return true;
+    } else {
+        console.warn(`⚠️ ${sdkName} در دسترس نیست`);
+        return false;
+    }
+}
+
+// ================================================
+// 1. تبلیغ جایزه‌ای Monetag
+// ================================================
+function watchRewardedAd() {
+    if (isReady('Monetag', show_11245827)) {
+        try {
+            show_11245827()
+                .then(() => addReward(10))
+                .catch(() => showNotification("❌ تبلیغ نمایش داده نشد"));
+        } catch (e) {
+            showNotification("❌ خطا در نمایش تبلیغ");
         }
+    } else {
+        showNotification("❌ SDK Monetag بارگذاری نشده");
+    }
+}
 
-        // User Data
-        let user = {
-            balance: 0,
-            today: 0,
-            ads: 0,
-            activity: [],
-            bonusClaimed: false,
-            lastResetDate: new Date().toDateString()
-        };
-
-        // ---------------- SDK loading / init ----------------
-
-        function setSdkBadge(text, ok) {
-            const badge = document.getElementById('sdkStatus');
-            badge.textContent = 'SDK: ' + text;
-            badge.className = 'debug-badge ' + (ok ? 'ok' : 'warn');
+// ================================================
+// 2. تبلیغ پاپ‌آپ Monetag
+// ================================================
+function watchPopupAd() {
+    if (isReady('Monetag', show_11245827)) {
+        try {
+            show_11245827('pop')
+                .then(() => addReward(5))
+                .catch(() => showNotification("❌ خطا در نمایش تبلیغ پاپ‌آپ"));
+        } catch (e) {
+            showNotification("❌ خطا در نمایش تبلیغ");
         }
+    } else {
+        showNotification("❌ SDK Monetag بارگذاری نشده");
+    }
+}
 
-        function onSdkLoaded() {
-            console.log('[AdFlow] AdsBitvex script tag loaded');
-            checkSdkReady();
+// ================================================
+// 3. تبلیغ Adexora
+// ================================================
+function watchAdexoraAd() {
+    if (isReady('Adexora', window.showAdexora)) {
+        try {
+            window.showAdexora()
+                .then(() => addReward(8))
+                .catch((e) => {
+                    console.error(e);
+                    showNotification("❌ خطا در نمایش تبلیغ Adexora");
+                });
+        } catch (e) {
+            showNotification("❌ خطا در نمایش تبلیغ");
         }
+    } else {
+        showNotification("❌ SDK Adexora بارگذاری نشده");
+    }
+}
 
-        function onSdkFailed() {
-            console.error('[AdFlow] AdsBitvex script FAILED to load (network/blocked/wrong URL)');
-            setSdkBadge('failed to load', false);
-            showTestModeNotice('Ad SDK failed to load — running in test mode.');
-        }
-
-        function checkSdkReady() {
-            if (sdkInitAttempted) return;
-            sdkInitAttempted = true;
-
-            if (typeof window.showadsbitvex !== 'function') {
-                console.error('[AdFlow] Script loaded but window.showadsbitvex is not available yet.');
-                setSdkBadge('function missing', false);
-                showTestModeNotice('Ad SDK function not found — running in test mode.');
-                return;
-            }
-
-            sdkReady = true;
-            setSdkBadge('ready', true);
-            console.log('[AdFlow] AdsBitvex ready, appid=000192');
-        }
-
-        function showTestModeNotice(msg) {
-            const box = document.getElementById('infoBox');
-            box.classList.add('warn');
-            box.textContent = '⚠️ ' + msg + ' Rewards below are simulated and no real ad is shown to the user.';
-        }
-
-        // Fallback: if onload never fires (e.g. cached weirdly) check after 4s
-        setTimeout(() => {
-            if (!sdkInitAttempted) {
-                if (typeof window.showadsbitvex === 'function') {
-                    console.warn('[AdFlow] onload never fired but showadsbitvex is present — checking late');
-                    checkSdkReady();
-                } else {
-                    console.error('[AdFlow] showadsbitvex still not available after timeout');
-                    setSdkBadge('not detected', false);
-                    showTestModeNotice('Ad SDK not detected — running in test mode.');
+// ================================================
+// 4. تبلیغ OnClickA
+// ================================================
+function watchOnClickAAd() {
+    if (typeof window.OnClickA !== 'undefined' && typeof window.OnClickA.showRewarded === 'function') {
+        try {
+            window.OnClickA.showRewarded({
+                placementId: '6122246',
+                onReward: () => addReward(12),
+                onError: (error) => {
+                    console.error('OnClickA Error:', error);
+                    showNotification("❌ خطا در نمایش تبلیغ OnClickA");
                 }
-            }
-        }, 4000);
-
-        // Load user data from storage
-        function loadUser() {
-            const saved = localStorage.getItem('adflow_user');
-            if (saved) {
-                try {
-                    user = JSON.parse(saved);
-                } catch (e) {
-                    console.log('Error loading user data');
-                }
-            }
-
-            // If the stored data is from a previous day, reset the
-            // daily counters (ads watched, today's earnings, bonus).
-            const todayStr = new Date().toDateString();
-            if (user.lastResetDate !== todayStr) {
-                console.log('[AdFlow] New day detected — resetting daily counters');
-                user.today = 0;
-                user.ads = 0;
-                user.bonusClaimed = false;
-                user.lastResetDate = todayStr;
-                saveUser();
-            }
-
-            updateUI();
-        }
-
-        // Save user data to storage
-        function saveUser() {
-            try {
-                localStorage.setItem('adflow_user', JSON.stringify(user));
-            } catch (e) {
-                console.log('Error saving user data');
-            }
-        }
-
-        // Update UI
-        function updateUI() {
-            document.getElementById('balanceAmount').textContent = '$' + user.balance.toFixed(2);
-            document.getElementById('todayAmount').textContent = '$' + user.today.toFixed(2);
-            document.getElementById('adCountDisplay').textContent = user.ads;
-            document.getElementById('statsAds').textContent = user.ads;
-            document.getElementById('statsDaily').textContent = '$' + user.today.toFixed(2);
-
-            // Update activity list
-            const activityList = document.getElementById('activityList');
-            if (user.activity.length === 0) {
-                activityList.innerHTML = '<div class="empty-state">No activity yet</div>';
-            } else {
-                activityList.innerHTML = user.activity.map(item => `
-                    <div class="activity-item">
-                        <span class="activity-time">${item.type === 'ad' ? '🎬' : '🎁'} ${item.time}</span>
-                        <span class="activity-reward">+$${item.amount}</span>
-                    </div>
-                `).join('');
-            }
-        }
-
-        // Watch Ad (AdsBitvex Reward Ad — window.showadsbitvex())
-        function watchAd() {
-            const btn = document.getElementById('watchAdBtn');
-            btn.disabled = true;
-            btn.textContent = 'Loading ad...';
-
-            if (sdkReady) {
-                console.log('[AdFlow] Requesting reward ad via window.showadsbitvex()...');
-                window.showadsbitvex()
-                    .then(() => {
-                        // User watched the ad — give reward here.
-                        console.log('[AdFlow] Reward ad completed, rewarding user');
-                        const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
-                        addReward(parseFloat(reward), false);
-                    })
-                    .catch((e) => {
-                        console.error('[AdFlow] Ad error:', e);
-                        showToast('Ad failed to load — no fill available');
-                    })
-                    .finally(() => {
-                        btn.disabled = false;
-                        btn.textContent = 'Watch Ad Now 🎬';
-                    });
-            } else {
-                console.warn('[AdFlow] SDK not ready, falling back to TEST MODE (no real ad shown)');
-                simulateAd();
-                btn.disabled = false;
-                btn.textContent = 'Watch Ad Now 🎬';
-            }
-        }
-
-        // Watch Sponsored Ad (AdsBitvex Interstitial — window.showadsbitvex_init())
-        function watchAdGram() {
-            const btn = document.getElementById('watchAdGramBtn');
-            btn.disabled = true;
-            btn.textContent = 'Loading ad...';
-
-            if (sdkReady) {
-                console.log('[AdFlow] Requesting interstitial ad via window.showadsbitvex_init()...');
-                window.showadsbitvex_init()
-                    .then(() => {
-                        console.log('[AdFlow] Interstitial ad closed, rewarding user');
-                        // Interstitials pay ~50% of reward-ad CPM per AdsBitvex docs.
-                        const reward = (Math.random() * 0.025 + 0.005).toFixed(3);
-                        addReward(parseFloat(reward), false);
-                    })
-                    .catch((e) => {
-                        console.error('[AdFlow] Interstitial ad error:', e);
-                        showToast('Ad failed to load — no fill available');
-                    })
-                    .finally(() => {
-                        btn.disabled = false;
-                        btn.textContent = 'Watch Sponsored Ad 🚀';
-                    });
-            } else {
-                console.warn('[AdFlow] SDK not ready, falling back to TEST MODE');
-                simulateAd();
-                btn.disabled = false;
-                btn.textContent = 'Watch Sponsored Ad 🚀';
-            }
-        }
-
-        // Simulate Ad (test mode only — clearly labeled, not silent)
-        function simulateAd() {
-            const reward = (Math.random() * 0.05 + 0.01).toFixed(3);
-            addReward(parseFloat(reward), true);
-        }
-
-        // Add Reward
-        function addReward(amount, isTestMode) {
-            user.balance += amount;
-            user.today += amount;
-            user.ads += 1;
-
-            const now = new Date();
-            const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-            user.activity.unshift({
-                type: 'ad',
-                amount: amount.toFixed(2),
-                time: time + (isTestMode ? ' (test)' : '')
             });
+            return;
+        } catch (e) {
+            showNotification("❌ خطا در نمایش تبلیغ");
+            return;
+        }
+    }
 
-            if (user.activity.length > 20) {
-                user.activity.pop();
+    if (typeof window.showOnClickA === 'function') {
+        try {
+            window.showOnClickA()
+                .then(() => addReward(12))
+                .catch((e) => {
+                    console.error(e);
+                    showNotification("❌ خطا در نمایش تبلیغ OnClickA");
+                });
+            return;
+        } catch (e) {
+            showNotification("❌ خطا در نمایش تبلیغ");
+            return;
+        }
+    }
+
+    showNotification("❌ SDK OnClickA بارگذاری نشده");
+}
+
+// ================================================
+// 5. تبلیغ GigaPub
+// ================================================
+function watchGigaPubAd() {
+    if (isReady('GigaPub', window.showGiga)) {
+        try {
+            window.showGiga()
+                .then(() => addReward(15))
+                .catch((e) => {
+                    console.error('GigaPub Error:', e);
+                    showNotification("❌ خطا در نمایش تبلیغ GigaPub");
+                });
+        } catch (e) {
+            console.error(e);
+            showNotification("❌ خطا در نمایش تبلیغ");
+        }
+    } else {
+        showNotification("❌ SDK GigaPub بارگذاری نشده");
+    }
+}
+
+// ================================================
+// 6. تبلیغ جایزه‌ای TowerAds
+// ================================================
+let towerAdsInstance = null;
+
+function initTowerAds() {
+    if (typeof TowerAds === 'undefined') {
+        console.warn('⚠️ TowerAds SDK در دسترس نیست');
+        return null;
+    }
+    if (!towerAdsInstance) {
+        towerAdsInstance = new TowerAds({
+            apiKey: "13bff728acb4b3a96140f5a89610308d",
+            placementId: "plc_25529b316647a540",
+
+            onRewardEarned(reward) {
+                console.log("TowerAds reward:", reward);
+                addReward(10);
+            },
+
+            onError(error) {
+                console.error("TowerAds error:", error);
+                showNotification("❌ خطا در نمایش تبلیغ TowerAds");
             }
+        });
+    }
+    return towerAdsInstance;
+}
 
-            saveUser();
-            updateUI();
-            showToast((isTestMode ? '[TEST MODE] ' : '') + `Earned $${amount.toFixed(3)}!`);
-        }
+async function watchTowerAd() {
+    const ads = initTowerAds();
+    if (!ads) {
+        showNotification("❌ SDK TowerAds بارگذاری نشده");
+        return;
+    }
+    try {
+        await ads.loadAndShow();
+    } catch (error) {
+        console.error("TowerAds show error:", error);
+        showNotification("❌ خطا در نمایش تبلیغ TowerAds");
+    }
+}
 
-        // Claim Daily Bonus
-        function claimDaily() {
-            if (user.bonusClaimed) {
-                showToast('Bonus already claimed today');
-                return;
-            }
+// ================================================
+// 7. تبلیغ ویدیویی RichAds
+// ================================================
+function watchRichAd() {
+    if (!window.richadsController) {
+        showNotification("❌ SDK RichAds بارگذاری نشده");
+        return;
+    }
+    richadsController.triggerInterstitialVideo()
+        .then((result) => {
+            console.log("RichAds result:", result);
+            addReward(10);
+        })
+        .catch((result) => {
+            console.log("RichAds error:", result);
+            showNotification("❌ تبلیغ RichAds نمایش داده نشد");
+        });
+}
 
-            const bonus = 0.5;
-            user.balance += bonus;
-            user.today += bonus;
-            user.bonusClaimed = true;
+// ================================================
+// Reset data
+// ================================================
+function resetData() {
+    if (confirm("آیا مطمئنی می‌خوای همه داده‌ها رو پاک کنی؟")) {
+        coins = 0;
+        adsSeen = 0;
+        totalCoins = 0;
+        saveData();
+        updateUI();
+        showNotification("🔄 داده‌ها بازنشانی شدند");
+    }
+}
 
-            const now = new Date();
-            const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-            user.activity.unshift({
-                type: 'bonus',
-                amount: bonus.toFixed(2),
-                time: time
-            });
-
-            saveUser();
-            updateUI();
-            showToast(`Daily bonus claimed! +$${bonus}`);
-
-            // Reset bonus tomorrow
-            setTimeout(() => {
-                user.bonusClaimed = false;
-                saveUser();
-            }, 86400000);
-        }
-
-        // Share App
-        function shareApp() {
-            if (tg && tg.shareLink) {
-                tg.shareLink('https://t.me/YourBotUsername/app', 'Check out AdFlow - Earn money by watching ads! 💰');
-            } else {
-                showToast('Share feature not available');
-            }
-        }
-
-        // Toast notification
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        // Reset daily earnings at midnight
-        function resetDaily() {
-            const now = new Date();
-            const tomorrow = new Date(now);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setHours(0, 0, 0, 0);
-
-            const timeUntilReset = tomorrow - now;
-
-            setTimeout(() => {
-                console.log('[AdFlow] Midnight reached — resetting daily counters');
-                user.today = 0;
-                user.ads = 0;
-                user.bonusClaimed = false;
-                user.lastResetDate = new Date().toDateString();
-                saveUser();
-                updateUI();
-                resetDaily();
-            }, timeUntilReset);
-        }
-
-        // Initialize
-        loadUser();
-        resetDaily();
-    </script>
+// ================================================
+// اطلاع‌رسانی به Telegram که Mini App آماده است
+// ================================================
+if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.ready();
+    console.log('✅ Telegram Mini App آماده شد');
+}
+</script>
 </body>
 </html>
+
