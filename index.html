@@ -64,6 +64,9 @@
   });
 </script>
 
+<!-- 10. AdsGalaxy SDK -->
+<script src="https://app.adsgalaxy.online/sdk.js?id=71"></script>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:20px;font-family:tahoma,sans-serif;background:#0f172a;color:white;min-height:100vh}
@@ -85,6 +88,7 @@ body{margin:0;padding:20px;font-family:tahoma,sans-serif;background:#0f172a;colo
 .towerads{background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
 .richads{background:linear-gradient(135deg,#7c3aed,#a855f7)}
 .adexium{background:linear-gradient(135deg,#059669,#10b981)}
+.adsgalaxy{background:linear-gradient(135deg,#facc15,#eab308)}
 .reset-btn{background:linear-gradient(135deg,#dc2626,#ef4444);color:white;margin-top:10px}
 .footer{text-align:center;margin-top:20px;color:#94a3b8;font-size:14px}
 .coin-animation{display:inline-block;transition:transform 0.3s}
@@ -158,9 +162,15 @@ body{margin:0;padding:20px;font-family:tahoma,sans-serif;background:#0f172a;colo
 <button class="btn adexium" onclick="watchAdexiumPushAd()">مشاهده تبلیغ Push</button>
 </div>
 
+<div class="ad-card">
+<h3>🌌 تبلیغ AdsGalaxy</h3>
+<p>پاداش: 10 سکه</p>
+<button class="btn adsgalaxy" onclick="watchAdsGalaxyAd()">مشاهده تبلیغ AdsGalaxy</button>
+</div>
+
 <button class="btn reset-btn" onclick="resetData()">🔄 Reset</button>
 
-<div class="footer">Monetag + Adexora + OnClckVd + GigaPub + TowerAds + RichAds + Adexium</div>
+<div class="footer">Monetag + Adexora + OnClckVd + GigaPub + TowerAds + RichAds + Adexium + AdsGalaxy</div>
 </div>
 
 <script>
@@ -426,6 +436,33 @@ function watchAdexiumPushAd() {
         console.error('Adexium error:', e);
         showNotification("❌ خطا در نمایش تبلیغ Adexium");
     }
+}
+
+// ================================================
+// 9. تبلیغ AdsGalaxy
+// ================================================
+function watchAdsGalaxyAd() {
+    if (!isReady('AdsGalaxy', window.showAdsGalaxy)) {
+        showNotification("❌ SDK AdsGalaxy بارگذاری نشده");
+        return;
+    }
+    window.showAdsGalaxy()
+        .then((result) => {
+            console.log('AdsGalaxy result:', result);
+            // result.request_id قابل ارسال به بک‌اند برای تطبیق با کال‌بک تایید شده است.
+            // پاداش‌های واقعی/قابل برداشت را فقط از طریق کال‌بک سمت سرور credit کن.
+            addReward(10);
+        })
+        .catch((error) => {
+            console.log(error && error.code, error && error.message);
+            if (error && error.code === "NO_FILL") {
+                showNotification("❌ تبلیغی موجود نیست");
+            } else if (error && error.code === "INVALID_INIT_DATA") {
+                showNotification("❌ این اپ باید داخل تلگرام باز شود");
+            } else {
+                showNotification("❌ خطا در نمایش تبلیغ AdsGalaxy");
+            }
+        });
 }
 
 // ================================================
